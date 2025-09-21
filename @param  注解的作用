@@ -1,0 +1,64 @@
+QUESTION:    @param  注解的作用
+ChatGPT 说：
+
+在 MyBatis 里，@Param 注解是用来 给 SQL 映射文件里的参数取名字 的。
+
+1. 为什么需要 @Param？
+
+MyBatis 在方法只有一个参数时，可以直接用参数名或对象属性来引用；
+但是 当方法有多个参数 时，默认不能直接用参数名，而是用 param1、param2… 来表示。
+
+// Mapper 接口
+User selectUser(String username, String password);
+
+
+对应 XML 如果写：
+
+<select id="selectUser" resultType="User">
+    SELECT * FROM user
+    WHERE username = #{username} AND password = #{password}
+</select>
+
+
+⚠️ 会报错，因为 MyBatis 实际上传进来的参数名是 param1 和 param2。
+
+2. 使用 @Param
+
+解决方法：在方法参数上加 @Param("别名")
+
+User selectUser(@Param("username") String username,
+                @Param("password") String password);
+
+
+这样，XML 就能写：
+
+<select id="selectUser" resultType="User">
+    SELECT * FROM user
+    WHERE username = #{username} AND password = #{password}
+</select>
+
+
+👉 MyBatis 会把参数封装成一个 Map：
+
+{
+  "username" : "Tom",
+  "password" : "123",
+  "param1"   : "Tom",
+  "param2"   : "123"
+}
+
+3. 常见用法
+
+多个参数时给 SQL 占位符命名。
+
+Map/List 参数时，避免使用 param1、param2 这种不直观的名字。
+
+在动态 SQL（比如 <foreach>）里绑定更清晰的变量名。
+
+4. 小结
+
+一个参数时：一般不用 @Param。
+
+多个参数时：最好都加上 @Param("name")，方便在 XML 里直接用 #{name}。
+
+底层原理：@Param 会把参数放入一个 Map，键是注解里的名字，值就是实参。
